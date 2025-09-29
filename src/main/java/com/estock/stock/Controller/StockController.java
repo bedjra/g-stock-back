@@ -1,13 +1,20 @@
 package com.estock.stock.Controller;
 
 import com.estock.stock.Entity.Produit;
+import com.estock.stock.Entity.Utilisateur;
+import com.estock.stock.enums.Role;
+import com.estock.stock.repository.UtilisateurRepository;
 import com.estock.stock.service.StockService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -18,157 +25,131 @@ public class StockController {
     @Autowired
     private StockService stockService;
 
-    @PostMapping
-    public ResponseEntity<Produit> ajouterProduit(@RequestBody Produit produit) {
-        Produit nouveauProduit = stockService.ajouterProduit(produit);
-        return ResponseEntity.ok(nouveauProduit);
-    }
-    @GetMapping
-    public ResponseEntity<List<Produit>> getAllProduits() {
-        return ResponseEntity.ok(stockService.getAllProduits());
-    }
-    @GetMapping("/{id}")
-    public ResponseEntity<Produit> getProduitById(@PathVariable Long id) {
-        return stockService.getProduitById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-    @PutMapping("/{id}")
-    public ResponseEntity<Produit> updateProduit(@PathVariable Long id, @RequestBody Produit produit) {
-        try {
-            return ResponseEntity.ok(stockService.updateProduit(id, produit));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+    @Autowired
+    private UtilisateurRepository utilisateurRepository;
+
+
+
+    @PostMapping("/user/login")
+    public ResponseEntity<?> login(@RequestBody Utilisateur request) {
+        // Recherche l'utilisateur par email
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(request.getEmail());
+
+        if (utilisateur == null) {
+            return ResponseEntity.status(401).body("Utilisateur non trouvé");
         }
+
+        // Vérification du mot de passe
+        if (!utilisateur.getPassword().equals(request.getPassword())) {
+            return ResponseEntity.status(401).body("Mot de passe incorrect");
+        }
+
+        // Si succès, renvoyer l'utilisateur (id + email + role)
+        return ResponseEntity.ok(utilisateur);
     }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduit(@PathVariable Long id) {
-        stockService.deleteProduit(id);
+
+    @GetMapping("/user/roles")
+    public ResponseEntity<Role[]> getAllRoles() {
+        return ResponseEntity.ok(Role.values());
+    }
+
+    @Operation(summary = "Récupérer tous les utilisateurs")
+    @GetMapping("/user")
+    public ResponseEntity<List<Utilisateur>> getAllUtilisateur() {
+        List<Utilisateur> utilisateurs = stockService.getAll();
+        return ResponseEntity.ok(utilisateurs);
+    }
+    @Operation(summary = "Inscription d'un compte")
+    @PostMapping("/user/save")
+    public ResponseEntity<Utilisateur> saveUtilisateur(@RequestBody Utilisateur utilisateur) {
+        Utilisateur savedUser = stockService.saveUtilisateur(utilisateur);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
+    @Operation(summary = "modifier un compte")
+    @PutMapping("/user/{id}")
+    public ResponseEntity<Utilisateur> updateUtilisateur(
+            @PathVariable Long id,
+            @RequestBody Utilisateur updatedData) {
+        Utilisateur utilisateur = stockService.updateUtilisateur(id, updatedData);
+        return ResponseEntity.ok(utilisateur);
+    }
+
+    @Operation(summary = "delete un compte")
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity<Void> deleteUtilisateur(@PathVariable Long id) {
+        stockService.deleteUtilisateur(id);
         return ResponseEntity.noContent().build();
     }
-    @GetMapping("/search")
-    public ResponseEntity<?> searchProduit(@RequestParam(required = false) String nom,
-                                           @RequestParam(required = false) String ref) {
-        if (nom != null) {
-            List<Produit> produits = stockService.getProduitsByNom(nom);
-            if (produits.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-            return ResponseEntity.ok(produits);
-        } else if (ref != null) {
-            return stockService.getProduitByRef(ref)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+
+    @Operation(summary = "Récupérer le role qui est connecté")
+    @GetMapping("/user/role/{email}")
+    public ResponseEntity<String> getRoleByEmail(@PathVariable String email) {
+        String role = stockService.getRoleByEmail(email);
+        if (role != null) {
+            return ResponseEntity.ok(role);
         } else {
-            return ResponseEntity.badRequest().body("Veuillez fournir soit un nom, soit une référence en paramètre.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Rôle introuvable");
         }
     }
 
 
+    @Operation(summary = "Obtenir l'utilisateur connecté")
+    @GetMapping("/user/info")
+    public ResponseEntity<?> getUtilisateurConnecte() {
+        Utilisateur utilisateur = stockService.getUtilisateurConnecte();
+        if (utilisateur != null) {
+            return ResponseEntity.ok(utilisateur);
+        } else {
+            return ResponseEntity.status(401).body("Aucun utilisateur connecté");
+        }
+    }
 
 
-
-
-//    @Autowired
-//    private com.eduMap.edumap.GLOBALE.service.stockService utilisateurService;
-//
-//    @Autowired
-//    private ConfigurationService configurationService;
-//
-//
-//    // Obtenir tous les rôles
-//    @Operation(summary = "Récupérer tous les roles")
-//    @GetMapping("/roles")
-//    public ResponseEntity<Role[]> getAllRoles() {
-//        return ResponseEntity.ok(Role.values());
+    // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // //// // //  Stock
+//    @PostMapping("/stock")
+//    public ResponseEntity<Produit> ajouterProduit(@RequestBody Produit produit) {
+//        Produit nouveauProduit = stockService.ajouterProduit(produit);
+//        return ResponseEntity.ok(nouveauProduit);
 //    }
-//
-//
-//    // Obtenir tous les utilisateurs
-//    @Operation(summary = "Récupérer tous les utilisateurs")
-//    @GetMapping("/utilisateur")
-//    public ResponseEntity<List<Utilisateur>> getAllUtilisateur() {
-//        List<Utilisateur> utilisateurs = utilisateurService.getAll();
-//        return ResponseEntity.ok(utilisateurs);
+//    @GetMapping("/stock")
+//    public ResponseEntity<List<Produit>> getAllProduits() {
+//        return ResponseEntity.ok(stockService.getAllProduits());
 //    }
-//
-//
-//    // Connexion
-//    @Operation(summary = "Connexion")
-//    @PostMapping("/login")
-//    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
+//    @GetMapping("/stock/{id}")
+//    public ResponseEntity<Produit> getProduitById(@PathVariable Long id) {
+//        return stockService.getProduitById(id)
+//                .map(ResponseEntity::ok)
+//                .orElse(ResponseEntity.notFound().build());
+//    }
+//    @PutMapping("/stock/{id}")
+//    public ResponseEntity<Produit> updateProduit(@PathVariable Long id, @RequestBody Produit produit) {
 //        try {
-//            String email = credentials.get("email");
-//            String password = credentials.get("password");
-//
-//            Map<String, Object> response = utilisateurService.login(email, password);
-//            return ResponseEntity.ok(response);
-//
-//        } catch (IllegalStateException e) {
-//            Map<String, Object> errorResponse = new HashMap<>();
-//            errorResponse.put("success", false);
-//            errorResponse.put("message", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-//
-//        } catch (IllegalArgumentException e) {
-//            Map<String, Object> errorResponse = new HashMap<>();
-//            errorResponse.put("success", false);
-//            errorResponse.put("message", e.getMessage());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
-//
-//        } catch (Exception e) {
-//            Map<String, Object> errorResponse = new HashMap<>();
-//            errorResponse.put("success", false);
-//            errorResponse.put("message", "Erreur serveur inattendue");
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+//            return ResponseEntity.ok(stockService.updateProduit(id, produit));
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.notFound().build();
 //        }
 //    }
-//
-//    @Operation(summary = "Inscription d'un compte")
-//    @PostMapping("/save")
-//    public ResponseEntity<Utilisateur> saveUtilisateur(@RequestBody Utilisateur utilisateur) {
-//        Utilisateur savedUser = utilisateurService.saveUtilisateur(utilisateur);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-//    }
-//
-//
-//
-//    @Operation(summary = "modifier un compte")
-//    @PutMapping("/{id}")
-//    public ResponseEntity<Utilisateur> updateUtilisateur(
-//            @PathVariable Long id,
-//            @RequestBody Utilisateur updatedData) {
-//        Utilisateur utilisateur = utilisateurService.updateUtilisateur(id, updatedData);
-//        return ResponseEntity.ok(utilisateur);
-//    }
-//
-//    @Operation(summary = "delete un compte")
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<Void> deleteUtilisateur(@PathVariable Long id) {
-//        utilisateurService.deleteUtilisateur(id);
+//    @DeleteMapping("/stock/{id}")
+//    public ResponseEntity<Void> deleteProduit(@PathVariable Long id) {
+//        stockService.deleteProduit(id);
 //        return ResponseEntity.noContent().build();
 //    }
-//
-//    @Operation(summary = "Récupérer le role qui est connecté")
-//    @GetMapping("/role/{email}")
-//    public ResponseEntity<String> getRoleByEmail(@PathVariable String email) {
-//        String role = utilisateurService.getRoleByEmail(email);
-//        if (role != null) {
-//            return ResponseEntity.ok(role);
+//    @GetMapping("/stock/search")
+//    public ResponseEntity<?> searchProduit(@RequestParam(required = false) String nom,
+//                                           @RequestParam(required = false) String ref) {
+//        if (nom != null) {
+//            List<Produit> produits = stockService.getProduitsByNom(nom);
+//            if (produits.isEmpty()) {
+//                return ResponseEntity.notFound().build();
+//            }
+//            return ResponseEntity.ok(produits);
+//        } else if (ref != null) {
+//            return stockService.getProduitByRef(ref)
+//                    .map(ResponseEntity::ok)
+//                    .orElse(ResponseEntity.notFound().build());
 //        } else {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Rôle introuvable");
-//        }
-//    }
-//
-//
-//    @Operation(summary = "Obtenir l'utilisateur connecté")
-//    @GetMapping("/info")
-//    public ResponseEntity<?> getUtilisateurConnecte() {
-//        Utilisateur utilisateur = utilisateurService.getUtilisateurConnecte();
-//        if (utilisateur != null) {
-//            return ResponseEntity.ok(utilisateur);
-//        } else {
-//            return ResponseEntity.status(401).body("Aucun utilisateur connecté");
+//            return ResponseEntity.badRequest().body("Veuillez fournir soit un nom, soit une référence en paramètre.");
 //        }
 //    }
 
