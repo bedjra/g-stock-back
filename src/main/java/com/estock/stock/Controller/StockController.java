@@ -2,22 +2,19 @@ package com.estock.stock.Controller;
 
 import com.estock.stock.Entity.Produit;
 import com.estock.stock.Entity.Utilisateur;
-import com.estock.stock.Entity.configuration;
+import com.estock.stock.Entity.Configuration;
 import com.estock.stock.enums.Role;
+import com.estock.stock.repository.ConfigurationRepository;
 import com.estock.stock.repository.UtilisateurRepository;
 import com.estock.stock.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.module.Configuration;
-import java.util.HashMap;
+import java.util.Base64;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 
 @RestController
@@ -31,6 +28,8 @@ public class StockController {
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
+    @Autowired
+    private ConfigurationRepository configurationRepository;
 
 
     @PostMapping("/user/login")
@@ -160,9 +159,18 @@ public class StockController {
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Config   
     @GetMapping
-    public List<Configuration> getAllConfigurations() {
-        return stockService.getAllConfigurations();
+    public Configuration getConfiguration() {
+        Configuration config = configurationRepository.findById(1L).orElseThrow();
+
+        if (config.getLogo() != null) {
+            String base64Logo = Base64.getEncoder().encodeToString(config.getLogo());
+            // Crée un nouveau champ temporaire pour Angular
+            config.setLogo(("data:image/png;base64," + base64Logo).getBytes());
+        }
+
+        return config;
     }
+
 
 
 

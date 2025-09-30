@@ -1,4 +1,5 @@
 package com.estock.stock.service;
+import com.estock.stock.Entity.Configuration;
 import com.estock.stock.Entity.Produit;
 import com.estock.stock.Entity.Utilisateur;
 import com.estock.stock.repository.ConfigurationRepository;
@@ -10,7 +11,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.lang.module.Configuration;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,9 +19,6 @@ public class StockService {
 
     @Autowired
     private UtilisateurRepository utilisateurRepository;
-    
-    @Autowired
-    private ConfigurationRepository configurationRepository;
 
     @Autowired
     private ProduitRepository produitRepository;
@@ -103,9 +100,7 @@ public class StockService {
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Configuration
-    public List<Configuration> getAllConfigurations() {
-        return configurationRepository.findAll();
-    }
+
 
 
 

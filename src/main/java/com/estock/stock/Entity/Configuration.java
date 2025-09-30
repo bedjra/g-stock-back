@@ -1,10 +1,10 @@
 package com.estock.stock.Entity;
+
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "organisations")
+public class Configuration {
 
-public class configuration {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -12,13 +12,18 @@ public class configuration {
     private String nom;
 
     @Lob // pour stocker une image (base64 ou blob)
-    private String logo;
+    private byte[] logo;
 
     private String adresse;
 
     private String tel1;
 
     private String tel2;
+
+    // --- Constructeurs ---
+    public Configuration() {
+    }
+
 
 
 
@@ -39,11 +44,11 @@ public class configuration {
         this.nom = nom;
     }
 
-    public String getLogo() {
+    public byte[] getLogo() {
         return logo;
     }
 
-    public void setLogo(String logo) {
+    public void setLogo(byte[] logo) {
         this.logo = logo;
     }
 
@@ -70,4 +75,4 @@ public class configuration {
     public void setTel2(String tel2) {
         this.tel2 = tel2;
     }
-    }
+}
