@@ -12,9 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.module.Configuration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 
 @RestController
@@ -107,53 +109,77 @@ public class StockController {
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Stock
-//    @PostMapping("/stock")
-//    public ResponseEntity<Produit> ajouterProduit(@RequestBody Produit produit) {
-//        Produit nouveauProduit = stockService.ajouterProduit(produit);
-//        return ResponseEntity.ok(nouveauProduit);
-//    }
-//    @GetMapping("/stock")
-//    public ResponseEntity<List<Produit>> getAllProduits() {
-//        return ResponseEntity.ok(stockService.getAllProduits());
-//    }
-//    @GetMapping("/stock/{id}")
-//    public ResponseEntity<Produit> getProduitById(@PathVariable Long id) {
-//        return stockService.getProduitById(id)
-//                .map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
-//    @PutMapping("/stock/{id}")
-//    public ResponseEntity<Produit> updateProduit(@PathVariable Long id, @RequestBody Produit produit) {
-//        try {
-//            return ResponseEntity.ok(stockService.updateProduit(id, produit));
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.notFound().build();
-//        }
-//    }
-//    @DeleteMapping("/stock/{id}")
-//    public ResponseEntity<Void> deleteProduit(@PathVariable Long id) {
-//        stockService.deleteProduit(id);
-//        return ResponseEntity.noContent().build();
-//    }
-//    @GetMapping("/stock/search")
-//    public ResponseEntity<?> searchProduit(@RequestParam(required = false) String nom,
-//                                           @RequestParam(required = false) String ref) {
-//        if (nom != null) {
-//            List<Produit> produits = stockService.getProduitsByNom(nom);
-//            if (produits.isEmpty()) {
-//                return ResponseEntity.notFound().build();
-//            }
-//            return ResponseEntity.ok(produits);
-//        } else if (ref != null) {
-//            return stockService.getProduitByRef(ref)
-//                    .map(ResponseEntity::ok)
-//                    .orElse(ResponseEntity.notFound().build());
-//        } else {
-//            return ResponseEntity.badRequest().body("Veuillez fournir soit un nom, soit une référence en paramètre.");
-//        }
-//    }
+    @PostMapping("/stock")
+    public ResponseEntity<Produit> ajouterProduit(@RequestBody Produit produit) {
+        Produit nouveauProduit = stockService.ajouterProduit(produit);
+        return ResponseEntity.ok(nouveauProduit);
+    }
+    @GetMapping("/stock")
+    public ResponseEntity<List<Produit>> getAllProduits() {
+        return ResponseEntity.ok(stockService.getAllProduits());
+    }
+    @GetMapping("/stock/{id}")
+    public ResponseEntity<Produit> getProduitById(@PathVariable Long id) {
+        return stockService.getProduitById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+    @PutMapping("/stock/{id}")
+    public ResponseEntity<Produit> updateProduit(@PathVariable Long id, @RequestBody Produit produit) {
+        try {
+            return ResponseEntity.ok(stockService.updateProduit(id, produit));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @DeleteMapping("/stock/{id}")
+    public ResponseEntity<Void> deleteProduit(@PathVariable Long id) {
+        stockService.deleteProduit(id);
+        return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/stock/search")
+    public ResponseEntity<?> searchProduit(@RequestParam(required = false) String nom,
+                                           @RequestParam(required = false) String ref) {
+        if (nom != null) {
+            List<Produit> produits = stockService.getProduitsByNom(nom);
+            if (produits.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(produits);
+        } else if (ref != null) {
+            return stockService.getProduitByRef(ref)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } else {
+            return ResponseEntity.badRequest().body("Veuillez fournir soit un nom, soit une référence en paramètre.");
+        }
+    }
+
+
+    // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // //// // //  Config   
+    @GetMapping
+    public List<Configuration> getAllConfigurations() {
+        return stockService.getAllConfigurations();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Configuration> getConfigurationById(@PathVariable Long id) {
+        Optional<Configuration> Configuration = stockService.getConfigurationById(id);
+        return Configuration.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public Configuration createConfiguration(@RequestBody Configuration Configuration) {
+        return stockService.saveConfiguration(Configuration);
+    }
 
 
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteConfiguration(@PathVariable Long id) {
+        stockService.deleteConfiguration(id);
+        return ResponseEntity.noContent().build();
+    }
 
 }

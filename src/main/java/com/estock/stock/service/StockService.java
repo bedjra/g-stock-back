@@ -1,15 +1,16 @@
 package com.estock.stock.service;
 import com.estock.stock.Entity.Produit;
 import com.estock.stock.Entity.Utilisateur;
+import com.estock.stock.repository.ConfigurationRepository;
 import com.estock.stock.repository.ProduitRepository;
 import com.estock.stock.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.lang.module.Configuration;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +19,13 @@ public class StockService {
 
     @Autowired
     private UtilisateurRepository utilisateurRepository;
+    
+    @Autowired
+    private ConfigurationRepository configurationRepository;
 
+    @Autowired
+    private ProduitRepository produitRepository;
+    
     public String getRoleByEmail(String email) {
         Utilisateur utilisateur = utilisateurRepository.findByEmail(email);
         if (utilisateur != null && utilisateur.getRole() != null) {
@@ -58,8 +65,7 @@ public class StockService {
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Stock
-    @Autowired
-    private ProduitRepository produitRepository;
+   
 
     public Produit ajouterProduit(Produit produit) {
         return produitRepository.save(produit);
@@ -98,7 +104,24 @@ public class StockService {
 
 
     // // // // // // // // // // // // // // // // // // // // // // //
-    // // // // //// // //  Produit
+    // // // // //// // //  Configuration
+
+
+   public List<Configuration> getAllConfigurations() {
+        return ConfigurationRepository.findAll();
+    }
+
+    public Optional<Configuration> getConfigurationById(Long id) {
+        return ConfigurationRepository.findById(id);
+    }
+
+    public Configuration saveConfiguration(Configuration Configuration) {
+        return ConfigurationRepository.save(Configuration);
+    }
+
+    public void deleteConfiguration(Long id) {
+        ConfigurationRepository.deleteById(id);
+    }
 
 
 }
