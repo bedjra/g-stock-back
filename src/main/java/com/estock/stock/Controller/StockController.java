@@ -2,6 +2,7 @@ package com.estock.stock.Controller;
 
 import com.estock.stock.Entity.Produit;
 import com.estock.stock.Entity.Utilisateur;
+import com.estock.stock.Entity.configuration;
 import com.estock.stock.enums.Role;
 import com.estock.stock.repository.UtilisateurRepository;
 import com.estock.stock.service.StockService;
@@ -163,23 +164,10 @@ public class StockController {
         return stockService.getAllConfigurations();
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Configuration> getConfigurationById(@PathVariable Long id) {
-        Optional<Configuration> Configuration = stockService.getConfigurationById(id);
-        return Configuration.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @PostMapping
-    public Configuration createConfiguration(@RequestBody Configuration Configuration) {
-        return stockService.saveConfiguration(Configuration);
-    }
 
 
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteConfiguration(@PathVariable Long id) {
-        stockService.deleteConfiguration(id);
-        return ResponseEntity.noContent().build();
-    }
+
+
 
 }

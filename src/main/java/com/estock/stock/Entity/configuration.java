@@ -1,6 +1,5 @@
 package com.estock.stock.Entity;
 import jakarta.persistence.*;
-import org.springframework.data.annotation.Id;
 
 @Entity
 @Table(name = "organisations")

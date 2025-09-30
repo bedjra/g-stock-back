@@ -65,8 +65,6 @@ public class StockService {
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Stock
-   
-
     public Produit ajouterProduit(Produit produit) {
         return produitRepository.save(produit);
     }
@@ -105,23 +103,12 @@ public class StockService {
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Configuration
-
-
-   public List<Configuration> getAllConfigurations() {
-        return ConfigurationRepository.findAll();
+    public List<Configuration> getAllConfigurations() {
+        return configurationRepository.findAll();
     }
 
-    public Optional<Configuration> getConfigurationById(Long id) {
-        return ConfigurationRepository.findById(id);
-    }
 
-    public Configuration saveConfiguration(Configuration Configuration) {
-        return ConfigurationRepository.save(Configuration);
-    }
 
-    public void deleteConfiguration(Long id) {
-        ConfigurationRepository.deleteById(id);
-    }
 
 
 }
