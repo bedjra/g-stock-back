@@ -6,11 +6,16 @@ import com.estock.stock.repository.ConfigurationRepository;
 import com.estock.stock.repository.ProduitRepository;
 import com.estock.stock.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -97,6 +102,62 @@ public class StockService {
         return produitRepository.findByRef(ref);
     }
 
+    public List<Produit> importProduitsFromExcel(MultipartFile file) throws Exception {
+        List<Produit> produits = new ArrayList<>();
+
+        try (InputStream is = file.getInputStream()) {
+            Workbook workbook = WorkbookFactory.create(is);
+            Sheet sheet = workbook.getSheetAt(0); // On prend la première feuille
+            Iterator<Row> rows = sheet.iterator();
+
+            boolean firstRow = true;
+            while (rows.hasNext()) {
+                Row row = rows.next();
+
+                // Ignorer la première ligne si c'est l'entête
+                if (firstRow) {
+                    firstRow = false;
+                    continue;
+                }
+
+                String nom = null;
+                String ref = null;
+                Integer prix = null;
+                Integer qte = 0;
+
+                Cell cellNom = row.getCell(0);
+                if (cellNom != null) nom = cellNom.getStringCellValue();
+
+                Cell cellRef = row.getCell(1);
+                if (cellRef != null) ref = cellRef.getStringCellValue();
+
+                Cell cellPrix = row.getCell(2);
+                if (cellPrix != null) prix = (int) cellPrix.getNumericCellValue();
+
+                Cell cellQte = row.getCell(3);
+                if (cellQte != null) qte = (int) cellQte.getNumericCellValue();
+
+                // Vérifier les champs obligatoires
+                if (nom == null || prix == null) {
+                    // On peut aussi logguer un warning ici
+                    continue;
+                }
+
+                Produit produit = new Produit();
+                produit.setNom(nom);
+                produit.setRef(ref);
+                produit.setPrix(prix);
+                produit.setQte(qte);
+
+                produits.add(produit);
+            }
+
+            // Sauvegarde en base
+            produitRepository.saveAll(produits);
+        }
+
+        return produits;
+    }
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Configuration

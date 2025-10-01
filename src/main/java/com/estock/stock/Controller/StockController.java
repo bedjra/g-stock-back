@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Base64;
 import java.util.List;
@@ -154,7 +155,15 @@ public class StockController {
             return ResponseEntity.badRequest().body("Veuillez fournir soit un nom, soit une référence en paramètre.");
         }
     }
-
+    @PostMapping("/stock/import")
+    public ResponseEntity<List<Produit>> importExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            List<Produit> produits = stockService.importProduitsFromExcel(file);
+            return ResponseEntity.ok(produits);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Config   
