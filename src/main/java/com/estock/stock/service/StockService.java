@@ -1,11 +1,10 @@
 package com.estock.stock.service;
-import com.estock.stock.Entity.Configuration;
-import com.estock.stock.Entity.Produit;
-import com.estock.stock.Entity.Utilisateur;
-import com.estock.stock.repository.ConfigurationRepository;
+import com.estock.stock.Entity.*;
 import com.estock.stock.repository.ProduitRepository;
+import com.estock.stock.repository.ReapproRepository;
 import com.estock.stock.repository.UtilisateurRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -27,7 +26,13 @@ public class StockService {
 
     @Autowired
     private ProduitRepository produitRepository;
-    
+
+    @Autowired
+    private ReapproRepository reapproRepository;
+
+
+
+
     public String getRoleByEmail(String email) {
         Utilisateur utilisateur = utilisateurRepository.findByEmail(email);
         if (utilisateur != null && utilisateur.getRole() != null) {
@@ -160,7 +165,26 @@ public class StockService {
     }
 
     // // // // // // // // // // // // // // // // // // // // // // //
-    // // // // //// // //  Configuration
+    // // // // //// // //  Reappro
+    @Transactional
+    public Reappro enregistrerReappro(Reappro reappro) {
+        List<ReapproProduit> produits = reappro.getProduits();
+
+        for (ReapproProduit rp : produits) {
+            Produit produit = produitRepository.findById(rp.getProduit().getId())
+                    .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+            // Mise à jour du stock
+            produit.setQte(produit.getQte() + rp.getQte());
+            produitRepository.save(produit);
+
+            // Lier le produit à l'objet ReapproProduit
+            rp.setProduit(produit);
+            rp.setReappro(reappro);
+        }
+
+        return reapproRepository.save(reappro);
+    }
+
 
 
 

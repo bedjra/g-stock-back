@@ -1,6 +1,7 @@
 package com.estock.stock.Controller;
 
 import com.estock.stock.Entity.Produit;
+import com.estock.stock.Entity.Reappro;
 import com.estock.stock.Entity.Utilisateur;
 import com.estock.stock.Entity.Configuration;
 import com.estock.stock.enums.Role;
@@ -207,6 +208,18 @@ public class StockController {
         }
     }
 
+    // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // //// // //  Reappro
+    @PostMapping("/reappro")
+    public ResponseEntity<Reappro> ajouterReappro(@RequestBody Reappro reappro) {
+        try {
+            Reappro reapproEnregistre = stockService.enregistrerReappro(reappro);
+            return new ResponseEntity<>(reapproEnregistre, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+    }
 
 
 
