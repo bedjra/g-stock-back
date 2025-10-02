@@ -7,14 +7,18 @@ import com.estock.stock.Entity.Configuration;
 import com.estock.stock.enums.Role;
 import com.estock.stock.repository.ConfigurationRepository;
 import com.estock.stock.repository.UtilisateurRepository;
+import com.estock.stock.service.PdfService;
 import com.estock.stock.service.StockService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +31,9 @@ public class StockController {
 
     @Autowired
     private StockService stockService;
+
+    @Autowired
+    private PdfService pdfService;
 
     @Autowired
     private UtilisateurRepository utilisateurRepository;
@@ -221,6 +228,23 @@ public class StockController {
         }
     }
 
+
+    // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // //// // //  Invent
+    @GetMapping("/pdf")
+    public ResponseEntity<byte[]> generatePdf() {
+        ByteArrayInputStream bis = pdfService.generatePdf();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "inline; filename=inventaire.pdf");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(bis.readAllBytes());
+    }
 
 
 }
