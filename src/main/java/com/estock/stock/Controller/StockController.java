@@ -38,9 +38,7 @@ public class StockController {
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
-    @Autowired
-    private ConfigurationRepository configurationRepository;
-
+    
 
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody Utilisateur request) {
@@ -176,44 +174,31 @@ public class StockController {
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Config   
-//    @GetMapping
-//    public Configuration getConfiguration() {
-//        Configuration config = configurationRepository.findById(1L).orElseThrow();
-//
-//        if (config.getLogo() != null) {
-//            String base64Logo = Base64.getEncoder().encodeToString(config.getLogo());
-//            // Crée un nouveau champ temporaire pour Angular
-//            config.setLogo(("data:image/png;base64," + base64Logo).getBytes());
-//        }
-//
-//        return config;
-//    }
-    @GetMapping
-    public Configuration getConfiguration() {
-        Configuration config = configurationRepository.findById(1L).orElseThrow();
-
-        if (config.getLogo() != null) {
-            String base64Logo = Base64.getEncoder().encodeToString(config.getLogo());
-            // Retourner directement la string base64
-            config.setLogoBase64(base64Logo); // Ajoutez un champ String logoBase64 dans votre entité
-            config.setLogo(null); // Éviter d'envoyer les bytes bruts
-        }
-
-        return config;
+    @Operation(summary = "Recuperer une ecole")
+    @GetMapping("/config")
+    public List<Configuration> getAllConfigurations() {
+        return stockService.getAllConfigurations();
     }
+    
+    @Operation(summary = "GET image d une ecole")
+    @GetMapping("/config/image")
+    public ResponseEntity<byte[]> getImage() {
+        byte[] image = stockService.getImage();
 
-    // Si tu veux récupérer directement en Base64 (ex : pour Angular)
-    @GetMapping("/{id}/logo")
-    public ResponseEntity<String> getLogoBase64(@PathVariable Long id) {
-        Optional<Configuration> configOpt = configurationRepository.findById(id);
-
-        if (configOpt.isPresent() && configOpt.get().getLogo() != null) {
-            String base64Logo = java.util.Base64.getEncoder().encodeToString(configOpt.get().getLogo());
-            return ResponseEntity.ok(base64Logo);
-        } else {
+        if (image == null) {
             return ResponseEntity.notFound().build();
         }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "image/png"); // Modifier selon le format réel de l'image (ex: image/jpeg)
+
+        return new ResponseEntity<>(image, headers, HttpStatus.OK);
     }
+
+    
+
+
+
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // // // // // // // // // // // // // // // // // // // //

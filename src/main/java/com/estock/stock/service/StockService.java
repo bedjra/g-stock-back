@@ -1,5 +1,6 @@
 package com.estock.stock.service;
 import com.estock.stock.Entity.*;
+import com.estock.stock.repository.ConfigurationRepository;
 import com.estock.stock.repository.ProduitRepository;
 import com.estock.stock.repository.ReapproRepository;
 import com.estock.stock.repository.UtilisateurRepository;
@@ -29,6 +30,10 @@ public class StockService {
 
     @Autowired
     private ReapproRepository reapproRepository;
+
+    @Autowired
+    private ConfigurationRepository configurationRepository;
+
 
 
 
@@ -185,6 +190,18 @@ public class StockService {
         return reapproRepository.save(reappro);
     }
 
+
+    // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // //// // //  Config
+
+
+    public List<Configuration> getAllConfigurations() {
+        return configurationRepository.findAll();
+    }
+
+    public byte[] getImage() {
+        return configurationRepository.findLogo();
+    }
 
 
 

@@ -11,7 +11,7 @@ public class Configuration {
 
     private String nom;
 
-    @Lob // pour stocker une image (base64 ou blob)
+    @Lob
     private byte[] logo;
 
     private String adresse;
@@ -20,18 +20,7 @@ public class Configuration {
 
     private String tel2;
 
-    @Transient //
-    private String logoBase64;
 
-    public String getLogoBase64() {
-        return logoBase64;
-    }
-
-    public void setLogoBase64(String logoBase64) {
-        this.logoBase64 = logoBase64;
-    }    // --- Constructeurs ---
-    public Configuration() {
-    }
 
 
 
