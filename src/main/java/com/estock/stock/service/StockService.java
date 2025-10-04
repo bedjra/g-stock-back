@@ -85,6 +85,10 @@ public class StockService {
         return produitRepository.findAll();
     }
 
+    public Optional<Produit> getProduitByNom(String nom) {
+        return produitRepository.findByNom(nom);
+    }
+
     public Optional<Produit> getProduitById(Long id) {
         return produitRepository.findById(id);
     }

@@ -132,6 +132,14 @@ public class StockController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/stock/nom/{nom}")
+    public ResponseEntity<Produit> getProduitByNom(@PathVariable String nom) {
+        return stockService.getProduitByNom(nom)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PutMapping("/stock/{id}")
     public ResponseEntity<Produit> updateProduit(@PathVariable Long id, @RequestBody Produit produit) {
         try {
@@ -174,13 +182,11 @@ public class StockController {
 
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Config   
-    @Operation(summary = "Recuperer une ecole")
     @GetMapping("/config")
     public List<Configuration> getAllConfigurations() {
         return stockService.getAllConfigurations();
     }
     
-    @Operation(summary = "GET image d une ecole")
     @GetMapping("/config/image")
     public ResponseEntity<byte[]> getImage() {
         byte[] image = stockService.getImage();

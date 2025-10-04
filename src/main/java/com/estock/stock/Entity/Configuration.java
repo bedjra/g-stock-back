@@ -22,9 +22,6 @@ public class Configuration {
 
 
 
-
-
-
     // --- Getters & Setters ---
     public Long getId() {
         return id;
