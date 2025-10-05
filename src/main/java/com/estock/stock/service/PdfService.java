@@ -117,14 +117,11 @@ public class PdfService {
 
             // --- Ligne de séparation ---
             document.add(new Paragraph("\n"));
-            // --- Ligne de séparation ---
             LineSeparator separator = new LineSeparator();
+            separator.setOffset(-1);
             separator.setLineWidth(1);
-            separator.setOffset(-2); // décale légèrement vers le haut
             document.add(new Chunk(separator));
-
-            document.add(new Paragraph("\n")); // seulement un petit espace après
-
+            document.add(new Paragraph("\n"));
 
             // --- Titre de la fiche ---
             Paragraph titre = new Paragraph("FICHE D'INVENTAIRE", fontTitle);
