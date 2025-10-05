@@ -105,8 +105,8 @@ public class PdfService {
             infoRight.setVerticalAlignment(Element.ALIGN_MIDDLE);
 
             if (config != null) {
-                Paragraph tel1 = new Paragraph("Tél : " + config.getTel1(), fontInfos);
-                Paragraph tel2 = new Paragraph("Tél 2 : " + config.getTel2(), fontInfos);
+                Paragraph tel1 = new Paragraph("Tel : " + config.getTel1(), fontInfos);
+                Paragraph tel2 = new Paragraph("Cel  : " + config.getTel2(), fontInfos);
                 tel1.setAlignment(Element.ALIGN_RIGHT);
                 tel2.setAlignment(Element.ALIGN_RIGHT);
                 infoRight.addElement(tel1);
