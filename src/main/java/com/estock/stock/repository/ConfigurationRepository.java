@@ -10,4 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface ConfigurationRepository extends JpaRepository<Configuration, Long> {
     @Query("SELECT c.logo FROM Configuration c WHERE c.id = (SELECT MIN(c2.id) FROM Configuration c2)")
     byte[] findLogo();
+
+    @Query("SELECT c FROM Configuration c")
+    Configuration getConfiguration();
 }
