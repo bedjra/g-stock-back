@@ -1,0 +1,101 @@
+package com.estock.stock.Controller;
+
+
+import com.estock.stock.Dto.VenteRequest;
+import com.estock.stock.Dto.VenteResponseDTO;
+import com.estock.stock.Entity.LigneVente;
+import com.estock.stock.Entity.Produit;
+import com.estock.stock.Entity.Utilisateur;
+import com.estock.stock.Entity.Vente;
+import com.estock.stock.service.StockService;
+import com.estock.stock.service.VenteService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/vente")
+@CrossOrigin(origins = "http://localhost:4200")
+
+public class VenteController {
+
+    private final VenteService venteService;
+
+    public VenteController(VenteService venteService) {
+        this.venteService = venteService;
+    }
+
+    @Autowired
+    private StockService stockService;
+
+    @PostMapping
+    public ResponseEntity<?> enregistrerVente(@RequestBody Map<String, Object> payload) {
+        try {
+            // Récupère l'email du payload
+            String emailVendeur = (String) payload.get("emailVendeur");
+
+            if (emailVendeur == null || emailVendeur.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "Email du vendeur requis"));
+            }
+
+            // 🔥 Construire l'objet Vente depuis le payload
+            Vente vente = new Vente();
+
+            // Récupérer les lignes
+            List<Map<String, Object>> lignesData = (List<Map<String, Object>>) payload.get("lignes");
+            List<LigneVente> lignes = lignesData.stream().map(ligneData -> {
+                LigneVente ligne = new LigneVente();
+                ligne.setQuantite((Integer) ligneData.get("quantite"));
+
+                // Récupérer l'ID du produit
+                Map<String, Object> produitData = (Map<String, Object>) ligneData.get("produit");
+                Produit produit = new Produit();
+                produit.setId(((Number) produitData.get("id")).longValue());
+                ligne.setProduit(produit);
+                ligne.setVente(vente); // Important pour la relation bidirectionnelle
+
+                return ligne;
+            }).collect(Collectors.toList());
+
+            vente.setLignes(lignes);
+
+            VenteResponseDTO response = venteService.enregistrerVente(vente, emailVendeur);
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            e.printStackTrace(); // Pour voir l'erreur complète dans les logs
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+//    @PostMapping
+//    public ResponseEntity<VenteResponseDTO> enregistrerVente(@RequestBody VenteRequest request) {
+//        try {
+//            // Récupère l'email depuis le body de la requête
+//            String emailVendeur = request.getEmailVendeur();
+//
+//            if (emailVendeur == null || emailVendeur.isEmpty()) {
+//                return ResponseEntity.badRequest().body(null);
+//            }
+//
+//            VenteResponseDTO response = venteService.enregistrerVente(request.getVente(), emailVendeur);
+//            return ResponseEntity.ok(response);
+//
+//        } catch (RuntimeException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+//        }
+//    }
+
+    @GetMapping
+    public List<Vente> getAllVentes() {
+        return venteService.getAllVentes();
+    }
+}

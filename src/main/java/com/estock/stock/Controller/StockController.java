@@ -26,6 +26,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = "http://localhost:4200")
 
 public class StockController {
 
@@ -38,7 +39,10 @@ public class StockController {
     @Autowired
     private UtilisateurRepository utilisateurRepository;
 
-    
+//    @Autowired
+//    private VenteRepository venteRepository;
+
+
 
     @PostMapping("/user/login")
     public ResponseEntity<?> login(@RequestBody Utilisateur request) {
@@ -236,6 +240,10 @@ public class StockController {
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(bis.readAllBytes());
     }
+
+
+
+
 
 
 }
