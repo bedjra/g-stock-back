@@ -1,11 +1,8 @@
 package com.estock.stock.Controller;
 
-
-import com.estock.stock.Dto.VenteRequest;
 import com.estock.stock.Dto.VenteResponseDTO;
 import com.estock.stock.Entity.LigneVente;
 import com.estock.stock.Entity.Produit;
-import com.estock.stock.Entity.Utilisateur;
 import com.estock.stock.Entity.Vente;
 import com.estock.stock.service.StockService;
 import com.estock.stock.service.VenteService;
@@ -14,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -76,7 +72,7 @@ public class VenteController {
         }
     }
 
-    
+
 
     @GetMapping
     public List<Vente> getAllVentes() {
