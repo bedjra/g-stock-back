@@ -76,23 +76,7 @@ public class VenteController {
         }
     }
 
-//    @PostMapping
-//    public ResponseEntity<VenteResponseDTO> enregistrerVente(@RequestBody VenteRequest request) {
-//        try {
-//            // Récupère l'email depuis le body de la requête
-//            String emailVendeur = request.getEmailVendeur();
-//
-//            if (emailVendeur == null || emailVendeur.isEmpty()) {
-//                return ResponseEntity.badRequest().body(null);
-//            }
-//
-//            VenteResponseDTO response = venteService.enregistrerVente(request.getVente(), emailVendeur);
-//            return ResponseEntity.ok(response);
-//
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-//        }
-//    }
+    
 
     @GetMapping
     public List<Vente> getAllVentes() {
