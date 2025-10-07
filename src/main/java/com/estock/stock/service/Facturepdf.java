@@ -22,9 +22,11 @@ public class Facturepdf {
 
     @Autowired
     private ConfigurationRepository configurationRepository;
+    private static int compteurFacture = 0; // compteur global
 
-    public byte[] genererFacturePdf(VenteResponseDTO vente) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
+       public byte[] genererFacturePdf(VenteResponseDTO vente) {
+           compteurFacture++;
+           ByteArrayOutputStream out = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, 36, 36, 36, 36);
 
         try {
@@ -114,7 +116,7 @@ public class Facturepdf {
 
             PdfPCell cellGauche = new PdfPCell();
             cellGauche.setBorder(Rectangle.NO_BORDER);
-            cellGauche.addElement(new Paragraph("N° Facture : " + vente.getId(), fontSmall));
+            cellGauche.addElement(new Paragraph("N° Facture : " + compteurFacture, fontSmall));
             cellGauche.addElement(new Paragraph("Vendeur : " + vente.getVendeur(), fontSmall));
 
             PdfPCell cellDroite = new PdfPCell();
@@ -172,7 +174,6 @@ public class Facturepdf {
             document.add(new Paragraph("\n"));
             Paragraph merci = new Paragraph("Merci pour votre achat !", fontSmall);
             merci.setAlignment(Element.ALIGN_CENTER);
-            merci.setItalic();
             document.add(merci);
 
             document.close();
