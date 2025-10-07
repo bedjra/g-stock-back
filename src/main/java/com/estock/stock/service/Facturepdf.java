@@ -119,25 +119,43 @@ public class Facturepdf {
             titre.setSpacingAfter(10);
             document.add(titre);
 
-            // --- Informations de la facture ---
+            // --- Informations de la facture (3 colonnes alignées) ---
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            PdfPTable infoTable = new PdfPTable(2);
+            PdfPTable infoTable = new PdfPTable(3); // 🔥 3 colonnes
             infoTable.setWidthPercentage(100);
-            infoTable.setWidths(new float[]{1, 1});
+            infoTable.setWidths(new float[]{1, 1, 1}); // 🔥 3 colonnes égales
 
+            // 🔥 Cellule gauche : N° Facture
             PdfPCell cellGauche = new PdfPCell();
             cellGauche.setBorder(Rectangle.NO_BORDER);
+            cellGauche.setHorizontalAlignment(Element.ALIGN_LEFT);
+            cellGauche.setVerticalAlignment(Element.ALIGN_MIDDLE);
             cellGauche.addElement(new Paragraph("N° Facture : " + compteurFacture, fontSmall));
-            cellGauche.addElement(new Paragraph("Vendeur : " + vente.getVendeur(), fontSmall));
 
+            // 🔥 Cellule centre : Vendeur
+            PdfPCell cellCentre = new PdfPCell();
+            cellCentre.setBorder(Rectangle.NO_BORDER);
+            cellCentre.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cellCentre.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            Paragraph vendeur = new Paragraph("Vendeur : " + vente.getVendeur(), fontSmall);
+            vendeur.setAlignment(Element.ALIGN_CENTER);
+            cellCentre.addElement(vendeur);
+
+            // 🔥 Cellule droite : Date
             PdfPCell cellDroite = new PdfPCell();
             cellDroite.setBorder(Rectangle.NO_BORDER);
             cellDroite.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            cellDroite.addElement(new Paragraph("Date : " + vente.getDateVente().format(formatter), fontSmall));
-            infoTable.addCell(cellGauche);
-            infoTable.addCell(cellDroite);
-            document.add(infoTable);
+            cellDroite.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            Paragraph date = new Paragraph("Date : " + vente.getDateVente().format(formatter), fontSmall);
+            date.setAlignment(Element.ALIGN_RIGHT);
+            cellDroite.addElement(date);
 
+            // Ajouter les cellules au tableau
+            infoTable.addCell(cellGauche);
+            infoTable.addCell(cellCentre);
+            infoTable.addCell(cellDroite);
+
+            document.add(infoTable);
             document.add(new Paragraph("\n"));
 
             // --- Tableau des produits ---
