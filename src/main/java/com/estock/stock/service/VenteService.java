@@ -10,7 +10,10 @@ import com.estock.stock.repository.VenteRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -86,4 +89,34 @@ public class VenteService {
     public long getNombreVentesAujourdhui() {
         return venteRepository.countVentesAujourdhui();
     }
+
+    public List<Map<String, Object>> getVentesRecentesParUtilisateur(String emailVendeur) {
+        if (emailVendeur == null || emailVendeur.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // On récupère les 5 dernières ventes du vendeur
+        List<Vente> ventes = venteRepository.findTop3ByVendeurEmailOrderByDateVenteDesc(emailVendeur);
+
+        return ventes.stream().map(vente -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("dateVente", vente.getDateVente());
+
+            String email = (vente.getVendeur() != null && vente.getVendeur().getEmail() != null)
+                    ? vente.getVendeur().getEmail()
+                    : "Inconnu";
+            map.put("utilisateur", email);
+
+            List<Map<String, Object>> produits = vente.getLignes().stream().map(ligne -> {
+                Map<String, Object> produitMap = new HashMap<>();
+                produitMap.put("nom", ligne.getProduit().getNom());
+                produitMap.put("quantite", ligne.getQuantite());
+                return produitMap;
+            }).collect(Collectors.toList());
+
+            map.put("produits", produits);
+            return map;
+        }).collect(Collectors.toList());
+    }
+
 }

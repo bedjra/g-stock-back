@@ -3,6 +3,7 @@ package com.estock.stock.Controller;
 import com.estock.stock.Dto.VenteResponseDTO;
 import com.estock.stock.Entity.LigneVente;
 import com.estock.stock.Entity.Produit;
+import com.estock.stock.Entity.Utilisateur;
 import com.estock.stock.Entity.Vente;
 import com.estock.stock.service.Facturepdf;
 import com.estock.stock.service.StockService;
@@ -98,27 +99,16 @@ public class VenteController {
 
 
     @GetMapping("/recentes")
-    public ResponseEntity<List<Map<String, Object>>> getVentesRecentes() {
-        List<Vente> ventes = venteRepository.findTop10ByOrderByDateVenteDesc();
+    public ResponseEntity<List<Map<String, Object>>> getVentesRecentesPourUtilisateur() {
+        // Récupérer l'utilisateur connecté via ton service
+        Utilisateur utilisateurConnecte = stockService.getUtilisateurConnecte();
+        if (utilisateurConnecte == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
 
-        List<Map<String, Object>> ventesData = ventes.stream().map(vente -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("dateVente", vente.getDateVente());
-            map.put("utilisateur",
-                    (vente.getUtilisateur() != null) ? vente.getUtilisateur().getEmail() : "Inconnu");
-
-            List<Map<String, Object>> produits = vente.getLignes().stream().map(ligne -> {
-                Map<String, Object> produitMap = new HashMap<>();
-                produitMap.put("nom", ligne.getProduit().getNom());
-                produitMap.put("quantite", ligne.getQuantite());
-                return produitMap;
-            }).collect(Collectors.toList());
-
-            map.put("produits", produits);
-            return map;
-        }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(ventesData);
+        List<Map<String, Object>> ventesRecentes = venteService.getVentesRecentesParUtilisateur(utilisateurConnecte.getEmail());
+        return ResponseEntity.ok(ventesRecentes);
     }
+
 
 }
