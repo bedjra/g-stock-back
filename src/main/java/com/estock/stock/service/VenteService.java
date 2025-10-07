@@ -90,26 +90,26 @@ public class VenteService {
         return venteRepository.countVentesAujourdhui();
     }
 
+
+
     public List<Map<String, Object>> getVentesRecentesParUtilisateur(String emailVendeur) {
         if (emailVendeur == null || emailVendeur.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // On récupère les 5 dernières ventes du vendeur
         List<Vente> ventes = venteRepository.findTop3ByVendeurEmailOrderByDateVenteDesc(emailVendeur);
 
         return ventes.stream().map(vente -> {
             Map<String, Object> map = new HashMap<>();
             map.put("dateVente", vente.getDateVente());
-
-            String email = (vente.getVendeur() != null && vente.getVendeur().getEmail() != null)
-                    ? vente.getVendeur().getEmail()
-                    : "Inconnu";
-            map.put("utilisateur", email);
+            map.put("utilisateur",
+                    (vente.getVendeur() != null && vente.getVendeur().getEmail() != null)
+                            ? vente.getVendeur().getEmail()
+                            : "Inconnu");
 
             List<Map<String, Object>> produits = vente.getLignes().stream().map(ligne -> {
                 Map<String, Object> produitMap = new HashMap<>();
-                produitMap.put("nom", ligne.getProduit().getNom());
+                produitMap.put("nom", ligne.getProduit() != null ? ligne.getProduit().getNom() : "Inconnu");
                 produitMap.put("quantite", ligne.getQuantite());
                 return produitMap;
             }).collect(Collectors.toList());

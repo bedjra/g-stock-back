@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -99,16 +100,20 @@ public class VenteController {
 
 
     @GetMapping("/recentes")
-    public ResponseEntity<List<Map<String, Object>>> getVentesRecentesPourUtilisateur() {
-        // Récupérer l'utilisateur connecté via ton service
+    public ResponseEntity<List<Map<String, Object>>> getVentesRecentesPourUtilisateurConnecte() {
+        // Appel au service qui récupère l'utilisateur connecté
         Utilisateur utilisateurConnecte = stockService.getUtilisateurConnecte();
+
         if (utilisateurConnecte == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Collections.emptyList());
         }
 
-        List<Map<String, Object>> ventesRecentes = venteService.getVentesRecentesParUtilisateur(utilisateurConnecte.getEmail());
+        String email = utilisateurConnecte.getEmail();
+        List<Map<String, Object>> ventesRecentes = venteService.getVentesRecentesParUtilisateur(email);
         return ResponseEntity.ok(ventesRecentes);
     }
+
 
 
 }
