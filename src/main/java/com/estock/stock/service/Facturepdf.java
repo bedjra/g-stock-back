@@ -14,6 +14,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Stream;
 
@@ -22,11 +29,15 @@ public class Facturepdf {
 
     @Autowired
     private ConfigurationRepository configurationRepository;
-    private static int compteurFacture = 0; // compteur global
 
-       public byte[] genererFacturePdf(VenteResponseDTO vente) {
-           compteurFacture++;
-           ByteArrayOutputStream out = new ByteArrayOutputStream();
+    private static int compteurFacture = 0;
+
+    // 🔥 Chemin du dossier où sauvegarder les factures
+    private static final String DOSSIER_FACTURES = "Factures";
+
+    public byte[] genererFacturePdf(VenteResponseDTO vente) {
+        compteurFacture++;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
         Document document = new Document(PageSize.A4, 36, 36, 36, 36);
 
         try {
@@ -178,11 +189,47 @@ public class Facturepdf {
 
             document.close();
 
+            // 🔥 SAUVEGARDER LE PDF DANS LE DOSSIER
+            sauvegarderFacture(out.toByteArray(), vente.getId());
+
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Erreur lors de la génération du PDF : " + e.getMessage());
         }
 
         return out.toByteArray();
+    }
+
+    /**
+     * 🔥 Sauvegarde la facture PDF dans le dossier Factures
+     */
+    private void sauvegarderFacture(byte[] pdfBytes, Long venteId) {
+        try {
+            // Créer le dossier s'il n'existe pas
+            Path dossierPath = Paths.get(DOSSIER_FACTURES);
+            if (!Files.exists(dossierPath)) {
+                Files.createDirectories(dossierPath);
+                System.out.println("✅ Dossier 'Factures' créé avec succès");
+            }
+
+            // Générer un nom de fichier unique avec date et heure
+            DateTimeFormatter fileFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+            String timestamp = LocalDateTime.now().format(fileFormatter);
+            String nomFichier = String.format("Facture_%d_%s.pdf", venteId, timestamp);
+
+            // Chemin complet du fichier
+            Path cheminComplet = dossierPath.resolve(nomFichier);
+
+            // Écrire le fichier
+            try (FileOutputStream fos = new FileOutputStream(cheminComplet.toFile())) {
+                fos.write(pdfBytes);
+                System.out.println("✅ Facture sauvegardée : " + cheminComplet.toAbsolutePath());
+            }
+
+        } catch (IOException e) {
+            System.err.println("❌ Erreur lors de la sauvegarde de la facture : " + e.getMessage());
+            e.printStackTrace();
+            // On ne lance pas d'exception pour ne pas bloquer la vente si la sauvegarde échoue
+        }
     }
 }
