@@ -184,6 +184,16 @@ public class StockController {
         }
     }
 
+    @GetMapping("/stock/total")
+    public ResponseEntity<Long> getTotalProduits() {
+        return ResponseEntity.ok(stockService.getTotalProduits());
+    }
+
+    @GetMapping("/stock/valeur")
+    public ResponseEntity<Double> getValeurStock() {
+        return ResponseEntity.ok(stockService.getValeurStock());
+    }
+
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Config   
     @GetMapping("/config")

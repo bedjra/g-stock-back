@@ -81,4 +81,9 @@ public class VenteService {
 
         return response;
     }
+
+
+    public long getNombreVentesAujourdhui() {
+        return venteRepository.countVentesAujourdhui();
+    }
 }

@@ -30,50 +30,6 @@ public class VenteController {
     @Autowired
     private StockService stockService;
 
-//    @PostMapping
-//    public ResponseEntity<?> enregistrerVente(@RequestBody Map<String, Object> payload) {
-//        try {
-//            // Récupère l'email du payload
-//            String emailVendeur = (String) payload.get("emailVendeur");
-//
-//            if (emailVendeur == null || emailVendeur.isEmpty()) {
-//                return ResponseEntity.badRequest()
-//                        .body(Map.of("error", "Email du vendeur requis"));
-//            }
-//
-//            // 🔥 Construire l'objet Vente depuis le payload
-//            Vente vente = new Vente();
-//
-//            // Récupérer les lignes
-//            List<Map<String, Object>> lignesData = (List<Map<String, Object>>) payload.get("lignes");
-//            List<LigneVente> lignes = lignesData.stream().map(ligneData -> {
-//                LigneVente ligne = new LigneVente();
-//                ligne.setQuantite((Integer) ligneData.get("quantite"));
-//
-//                // Récupérer l'ID du produit
-//                Map<String, Object> produitData = (Map<String, Object>) ligneData.get("produit");
-//                Produit produit = new Produit();
-//                produit.setId(((Number) produitData.get("id")).longValue());
-//                ligne.setProduit(produit);
-//                ligne.setVente(vente); // Important pour la relation bidirectionnelle
-//
-//                return ligne;
-//            }).collect(Collectors.toList());
-//
-//            vente.setLignes(lignes);
-//
-//            VenteResponseDTO response = venteService.enregistrerVente(vente, emailVendeur);
-//            return ResponseEntity.ok(response);
-//
-//        } catch (RuntimeException e) {
-//            e.printStackTrace(); // Pour voir l'erreur complète dans les logs
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(Map.of("error", e.getMessage()));
-//        }
-//    }
-//
-
-
     @Autowired
     private Facturepdf facturepdf;
 
@@ -128,8 +84,41 @@ public class VenteController {
         }
     }
 
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> getNombreVentesAujourdhui() {
+        long count = venteService.getNombreVentesAujourdhui();
+        return ResponseEntity.ok(count);
+    }
+
     @GetMapping
     public List<Vente> getAllVentes() {
         return venteService.getAllVentes();
     }
+
+
+    @GetMapping("/recentes")
+    public ResponseEntity<List<Map<String, Object>>> getVentesRecentes() {
+        List<Vente> ventes = venteRepository.findTop10ByOrderByDateVenteDesc();
+
+        List<Map<String, Object>> ventesData = ventes.stream().map(vente -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("dateVente", vente.getDateVente());
+            map.put("utilisateur",
+                    (vente.getUtilisateur() != null) ? vente.getUtilisateur().getEmail() : "Inconnu");
+
+            List<Map<String, Object>> produits = vente.getLignes().stream().map(ligne -> {
+                Map<String, Object> produitMap = new HashMap<>();
+                produitMap.put("nom", ligne.getProduit().getNom());
+                produitMap.put("quantite", ligne.getQuantite());
+                return produitMap;
+            }).collect(Collectors.toList());
+
+            map.put("produits", produits);
+            return map;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(ventesData);
+    }
+
 }

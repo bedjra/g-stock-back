@@ -173,6 +173,17 @@ public class StockService {
         return produits;
     }
 
+    public long getTotalProduits() {
+        return produitRepository.count();
+    }
+
+    public double getValeurStock() {
+        return produitRepository.findAll()
+                .stream()
+                .mapToDouble(p -> p.getPrix() * p.getQte())
+                .sum();
+    }
+
     // // // // // // // // // // // // // // // // // // // // // // //
     // // // // //// // //  Reappro
     @Transactional
