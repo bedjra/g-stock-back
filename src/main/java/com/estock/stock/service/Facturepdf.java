@@ -107,11 +107,12 @@ public class Facturepdf {
             document.add(headerTable);
 
             // Ligne séparatrice
-            document.add(new Paragraph("\n"));
+            document.add(Chunk.NEWLINE);
             LineSeparator separator = new LineSeparator();
+            separator.setOffset(-2);
             separator.setLineWidth(1);
             document.add(new Chunk(separator));
-            document.add(new Paragraph("\n"));
+            document.add(Chunk.NEWLINE);
 
             // --- Titre ---
             Paragraph titre = new Paragraph("FACTURE DE VENTE", fontTitle);
