@@ -123,12 +123,12 @@ public class PdfService {
             document.add(headerTable);
 
             // --- Ligne de séparation ---
-            document.add(new Paragraph("\n"));
+            document.add(Chunk.NEWLINE);
             LineSeparator separator = new LineSeparator();
-            separator.setOffset(-1);
+            separator.setOffset(-2); // Rapprocher la ligne
             separator.setLineWidth(1);
             document.add(new Chunk(separator));
-            document.add(new Paragraph("\n"));
+            document.add(Chunk.NEWLINE);
 
             // --- Titre de la fiche ---
             Paragraph titre = new Paragraph("FICHE D'INVENTAIRE", fontTitle);
