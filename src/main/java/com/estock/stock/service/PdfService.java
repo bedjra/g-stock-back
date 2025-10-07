@@ -2,7 +2,6 @@ package com.estock.stock.service;
 
 import com.estock.stock.Entity.Configuration;
 import com.estock.stock.Entity.Produit;
-import com.estock.stock.Entity.Utilisateur;
 import com.estock.stock.repository.ConfigurationRepository;
 import com.estock.stock.repository.ProduitRepository;
 import com.itextpdf.text.*;
@@ -14,11 +13,16 @@ import com.itextpdf.text.pdf.PdfWriter;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.itextpdf.text.Image; //
+import com.itextpdf.text.Image;
 
 import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -36,6 +40,9 @@ public class PdfService {
 
     @Autowired
     private ConfigurationRepository configurationRepository;
+
+    // 🔥 Dossier pour sauvegarder les inventaires
+    private static final String DOSSIER_INVENTAIRES = "Inventaires";
 
     public PdfService(ProduitRepository produitRepository) {
         this.produitRepository = produitRepository;
@@ -209,6 +216,10 @@ public class PdfService {
             document.add(table);
             document.close();
 
+            // 🔥 SAUVEGARDER LE PDF DANS LE DOSSIER INVENTAIRES
+            byte[] pdfBytes = out.toByteArray();
+            sauvegarderInventaire(pdfBytes);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -216,4 +227,36 @@ public class PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
+    /**
+     * 🔥 Sauvegarde l'inventaire PDF dans le dossier Inventaires
+     */
+    private void sauvegarderInventaire(byte[] pdfBytes) {
+        try {
+            // Créer le dossier s'il n'existe pas
+            Path dossierPath = Paths.get(DOSSIER_INVENTAIRES);
+            if (!Files.exists(dossierPath)) {
+                Files.createDirectories(dossierPath);
+                System.out.println("✅ Dossier 'Inventaires' créé avec succès");
+            }
+
+            // Générer un nom de fichier avec date et heure
+            DateTimeFormatter fileFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+            String timestamp = LocalDateTime.now().format(fileFormatter);
+            String nomFichier = String.format("Inventaire_%s.pdf", timestamp);
+
+            // Chemin complet du fichier
+            Path cheminComplet = dossierPath.resolve(nomFichier);
+
+            // Écrire le fichier
+            try (FileOutputStream fos = new FileOutputStream(cheminComplet.toFile())) {
+                fos.write(pdfBytes);
+                System.out.println("✅ Inventaire sauvegardé : " + cheminComplet.toAbsolutePath());
+            }
+
+        } catch (IOException e) {
+            System.err.println("❌ Erreur lors de la sauvegarde de l'inventaire : " + e.getMessage());
+            e.printStackTrace();
+            // On ne lance pas d'exception pour ne pas bloquer la génération du PDF
+        }
+    }
 }
