@@ -127,4 +127,31 @@ public class VenteService {
 //        }).collect(Collectors.toList());
 //    }
 
+
+
+    public List<Map<String, Object>> getTroisDernieresVentes() {
+        // 🔹 On récupère les 3 dernières ventes globales
+        List<Vente> ventes = venteRepository.findTop3ByOrderByDateVenteDesc();
+
+        // 🔹 On transforme le résultat pour le frontend
+        return ventes.stream().map(vente -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("dateVente", vente.getDateVente());
+            map.put("utilisateur",
+                    (vente.getVendeur() != null && vente.getVendeur().getEmail() != null)
+                            ? vente.getVendeur().getEmail()
+                            : "Inconnu");
+
+            List<Map<String, Object>> produits = vente.getLignes().stream().map(ligne -> {
+                Map<String, Object> produitMap = new HashMap<>();
+                produitMap.put("nom", ligne.getProduit() != null ? ligne.getProduit().getNom() : "Inconnu");
+                produitMap.put("quantite", ligne.getQuantite());
+                return produitMap;
+            }).collect(Collectors.toList());
+
+            map.put("produits", produits);
+            return map;
+        }).collect(Collectors.toList());
+    }
+
 }

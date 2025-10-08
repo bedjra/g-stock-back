@@ -106,20 +106,11 @@ public class VenteController {
     }
 
 
-//    @GetMapping("/recentes")
-//    public ResponseEntity<List<Map<String, Object>>> getVentesRecentesPourUtilisateurConnecte() {
-//        // Appel au service qui récupère l'utilisateur connecté
-//        Utilisateur utilisateurConnecte = stockService.getUtilisateurConnecte();
-//
-//        if (utilisateurConnecte == null) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body(Collections.emptyList());
-//        }
-//
-//        String email = utilisateurConnecte.getEmail();
-//        List<Map<String, Object>> ventesRecentes = venteService.getVentesRecentesParUtilisateur(email);
-//        return ResponseEntity.ok(ventesRecentes);
-//    }
+    @GetMapping("/recentes")
+    public ResponseEntity<List<Map<String, Object>>> getTroisDernieresVentes() {
+        List<Map<String, Object>> ventes = venteService.getTroisDernieresVentes();
+        return ResponseEntity.ok(ventes);
+    }
 
 
 

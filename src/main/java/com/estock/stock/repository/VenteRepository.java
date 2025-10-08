@@ -11,7 +11,7 @@ public interface VenteRepository extends JpaRepository<Vente, Long> {
     @Query("SELECT COUNT(v) FROM Vente v WHERE DATE(v.dateVente) = CURRENT_DATE")
     long countVentesAujourdhui();
 
-    List<Vente> findTop3ByVendeurEmailOrderByDateVenteDesc(String emailVendeur);
+    List<Vente> findTop3ByOrderByDateVenteDesc();
 
     @Query("SELECT v FROM Vente v WHERE DATE(v.dateVente) = CURRENT_DATE")
     List<Vente> findVentesAujourdhui();
