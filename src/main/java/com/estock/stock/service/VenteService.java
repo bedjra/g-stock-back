@@ -91,6 +91,14 @@ public class VenteService {
     }
 
 
+    public double getMontantTotalVentesAujourdhui() {
+        List<Vente> ventes = venteRepository.findVentesAujourdhui();
+        return ventes.stream()
+                .mapToDouble(Vente::getTotal)
+                .sum();
+    }
+
+
 
 //    public List<Map<String, Object>> getVentesRecentesParUtilisateur(String emailVendeur) {
 //        if (emailVendeur == null || emailVendeur.isEmpty()) {

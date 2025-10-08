@@ -76,11 +76,8 @@ public class PdfService {
                 Image logo = Image.getInstance(config.getLogo());
                 logo.scaleToFit(70, 70);
                 PdfPCell logoCell = new PdfPCell(logo);
-                logoCell.setBorder(Rectangle.BOX);  // Encadrement complet
-                logoCell.setBorderColor(BaseColor.GRAY);  // Couleur grise
-                logoCell.setBorderWidth(0.5f);  // Bordure fine
-                logoCell.setPadding(5);  // Espacement intérieur pour aérer
-                logoCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                logoCell.setBorder(Rectangle.NO_BORDER);
+                logoCell.setHorizontalAlignment(Element.ALIGN_LEFT);
                 logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
                 headerTable.addCell(logoCell);
             } else {
@@ -122,16 +119,6 @@ public class PdfService {
                 infoRight.addElement(tel1);
                 infoRight.addElement(tel2);
             }
-//            headerTable.addCell(infoRight);
-//            document.add(headerTable);
-//
-//            // --- Ligne de séparation ---
-//            document.add(Chunk.NEWLINE);
-//            LineSeparator separator = new LineSeparator();
-//            separator.setOffset(-2); // Rapprocher la ligne
-//            separator.setLineWidth(1);
-//            document.add(new Chunk(separator));
-//            document.add(Chunk.NEWLINE);
 
             headerTable.addCell(infoRight);
             document.add(headerTable);

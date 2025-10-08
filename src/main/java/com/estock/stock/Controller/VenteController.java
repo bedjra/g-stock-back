@@ -93,6 +93,13 @@ public class VenteController {
         return ResponseEntity.ok(count);
     }
 
+    @GetMapping("/montant")
+    public ResponseEntity<Double> getMontantTotalVentesAujourdhui() {
+        double total = venteService.getMontantTotalVentesAujourdhui();
+        return ResponseEntity.ok(total);
+    }
+
+
     @GetMapping
     public List<Vente> getAllVentes() {
         return venteService.getAllVentes();
