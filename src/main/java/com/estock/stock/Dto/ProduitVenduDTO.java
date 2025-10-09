@@ -8,6 +8,8 @@ public class ProduitVenduDTO {
     private String nom;
     private int quantite;
     private double prixUnitaire;
+    private double remise;
+    private double sousTotal;
 
 
     public String getNom() {
@@ -16,6 +18,22 @@ public class ProduitVenduDTO {
 
     public void setNom(String nom) {
         this.nom = nom;
+    }
+
+    public double getRemise() {
+        return remise;
+    }
+
+    public double getSousTotal() {
+        return sousTotal;
+    }
+
+    public void setSousTotal(double sousTotal) {
+        this.sousTotal = sousTotal;
+    }
+
+    public void setRemise(double remise) {
+        this.remise = remise;
     }
 
     public int getQuantite() {

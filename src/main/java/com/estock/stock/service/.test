@@ -5,7 +5,10 @@ import com.estock.stock.Dto.VenteResponseDTO;
 import com.estock.stock.Entity.Configuration;
 import com.estock.stock.repository.ConfigurationRepository;
 import com.itextpdf.text.*;
-import com.itextpdf.text.pdf.*;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,10 +37,10 @@ public class Facturepdf {
     public byte[] genererFacturePdf(VenteResponseDTO vente) {
         compteurFacture++;
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document document = new Document(PageSize.A4, 30, 30, 30, 80); // bottom margin 80 pour la note
+        Document document = new Document(PageSize.A4, 30, 30, 30, 30);
 
         try {
-            PdfWriter writer = PdfWriter.getInstance(document, out);
+            PdfWriter.getInstance(document, out);
             document.open();
 
             // === Styles ===
@@ -58,6 +61,7 @@ public class Facturepdf {
             headerTable.setWidthPercentage(100);
             headerTable.setWidths(new float[]{1f, 2f});
 
+            // Logo à gauche
             PdfPCell logoCell = new PdfPCell();
             logoCell.setBorder(Rectangle.NO_BORDER);
             if (config != null && config.getLogo() != null) {
@@ -67,18 +71,33 @@ public class Facturepdf {
             }
             headerTable.addCell(logoCell);
 
+            // Infos entreprise à droite (SANS les détails)
             PdfPCell infoCell = new PdfPCell();
             infoCell.setBorder(Rectangle.NO_BORDER);
             infoCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
             if (config != null) {
-                infoCell.addElement(new Paragraph(config.getNom(), fontEntreprise));
-                infoCell.addElement(new Paragraph(config.getAdresse(), fontSousTitre));
-                infoCell.addElement(new Paragraph("Tél: " + config.getTel1() + " / " + config.getTel2(), fontSousTitre));
+                Paragraph nomEntreprise = new Paragraph(config.getNom(), fontEntreprise);
+                nomEntreprise.setAlignment(Element.ALIGN_RIGHT);
+                infoCell.addElement(nomEntreprise);
+
+                Paragraph adresse = new Paragraph(config.getAdresse(), fontSousTitre);
+                adresse.setAlignment(Element.ALIGN_RIGHT);
+                adresse.setSpacingBefore(3);
+                infoCell.addElement(adresse);
+
+                Paragraph telephones = new Paragraph(
+                        "Tél: " + config.getTel1() + " / " + config.getTel2(),
+                        fontSousTitre
+                );
+                telephones.setAlignment(Element.ALIGN_RIGHT);
+                infoCell.addElement(telephones);
             }
+
             headerTable.addCell(infoCell);
             document.add(headerTable);
 
-            // === Date facture ===
+            // === DATE FACTURE (en haut à droite) ===
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             Paragraph dateFacture = new Paragraph("Date Facture : " + vente.getDateVente().format(formatter), fontInfo);
             dateFacture.setAlignment(Element.ALIGN_RIGHT);
@@ -86,26 +105,30 @@ public class Facturepdf {
             dateFacture.setSpacingAfter(10);
             document.add(dateFacture);
 
-            // === Ligne séparation ===
-            document.add(new Chunk(new com.itextpdf.text.pdf.draw.LineSeparator()));
+            // === LIGNE DE SÉPARATION ===
+            document.add(new Paragraph(" "));
+            com.itextpdf.text.pdf.draw.LineSeparator line = new com.itextpdf.text.pdf.draw.LineSeparator();
+            line.setLineWidth(1f);
+            document.add(new Chunk(line));
 
-            // === Numéro facture ===
+            // === NUMÉRO DE FACTURE ===
             Paragraph numFacture = new Paragraph("FACTURE N° " + String.format("%010d", compteurFacture), fontTitle);
             numFacture.setAlignment(Element.ALIGN_CENTER);
             numFacture.setSpacingBefore(8);
             numFacture.setSpacingAfter(8);
             document.add(numFacture);
 
-            // === Client ===
+            // === NOM DU CLIENT ===
             Paragraph client = new Paragraph("NOM DU CLIENT : CLIENTS DIVERS", fontInfoBold);
             client.setSpacingAfter(10);
             document.add(client);
 
-            // === Tableau des produits ===
+            // === TABLEAU DES PRODUITS ===
             PdfPTable table = new PdfPTable(6);
             table.setWidthPercentage(100);
             table.setWidths(new float[]{1f, 5f, 2f, 2f, 2f, 2f});
 
+            // En-têtes du tableau
             Stream.of("Qté", "Désignation", "P.V.U", "Remise", "Prix Net", "Montant")
                     .forEach(title -> {
                         PdfPCell header = new PdfPCell(new Phrase(title, fontTableHeader));
@@ -115,10 +138,12 @@ public class Facturepdf {
                         table.addCell(header);
                     });
 
+            // Calculs des totaux
             double totalHT = 0;
             double totalRemise = 0;
             double totalTTC = 0;
 
+            // Lignes des produits
             for (ProduitVenduDTO produit : vente.getProduits()) {
                 int qte = produit.getQuantite();
                 double prixU = produit.getPrixUnitaire();
@@ -130,33 +155,112 @@ public class Facturepdf {
                 totalRemise += remise;
                 totalTTC += montant;
 
-                table.addCell(createCellCenter(String.valueOf(qte), fontSmall));
-                table.addCell(createCellLeft(produit.getNom(), fontSmall));
-                table.addCell(createCellRight(String.format("%.0f F", prixU), fontSmall));
-                table.addCell(createCellRight(String.format("%.0f", remise), fontSmall));
-                table.addCell(createCellRight(String.format("%.0f", prixNet), fontSmall));
-                table.addCell(createCellRight(String.format("%.0f F", montant), fontSmall));
+                // Quantité (NOMBRE EXACT)
+                PdfPCell qteCell = new PdfPCell(new Phrase(String.valueOf(qte), fontSmall));
+                qteCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                qteCell.setPadding(5);
+                table.addCell(qteCell);
+
+                // Désignation
+                PdfPCell nomCell = new PdfPCell(new Phrase(produit.getNom(), fontSmall));
+                nomCell.setPadding(5);
+                table.addCell(nomCell);
+
+                // P.V.U
+                PdfPCell pvuCell = new PdfPCell(new Phrase(String.format("%.0f F", prixU), fontSmall));
+                pvuCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                pvuCell.setPadding(5);
+                table.addCell(pvuCell);
+
+                // Remise
+                PdfPCell remiseCell = new PdfPCell(new Phrase(String.format("%.0f ", remise), fontSmall));
+                remiseCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                remiseCell.setPadding(5);
+                table.addCell(remiseCell);
+
+                // Prix Net
+                PdfPCell prixNetCell = new PdfPCell(new Phrase(String.format("%.0f ", prixNet), fontSmall));
+                prixNetCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                prixNetCell.setPadding(5);
+                table.addCell(prixNetCell);
+
+                // Montant
+                PdfPCell montantCell = new PdfPCell(new Phrase(String.format("%.0f F", montant), fontSmall));
+                montantCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+                montantCell.setPadding(5);
+                table.addCell(montantCell);
             }
 
             document.add(table);
             document.add(new Paragraph(" "));
 
-            // === Totaux ===
+            // === TABLEAU DES TOTAUX (dans un cadre à droite) ===
             PdfPTable totauxTable = new PdfPTable(2);
             totauxTable.setWidthPercentage(45);
             totauxTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
             totauxTable.setWidths(new float[]{3f, 2f});
 
-            addTotauxRow(totauxTable, "Montant Total HT", totalHT, fontInfoBold, fontInfo);
-            addTotauxRow(totauxTable, "Remise", totalRemise, fontInfoBold, fontInfo);
-            addTotauxRow(totauxTable, "Net Commercial", totalTTC, fontInfoBold, fontInfo);
-            addTotauxRow(totauxTable, "Montant TVA", 0, fontInfoBold, fontInfo);
-            addTotauxRow(totauxTable, "Montant TTC", totalTTC, fontTotal, fontTotal, BaseColor.LIGHT_GRAY);
+            // Montant Total HT
+            PdfPCell labelHT = new PdfPCell(new Phrase("Montant Total HT", fontInfoBold));
+            labelHT.setBorder(Rectangle.BOX);
+            labelHT.setPadding(5);
+            PdfPCell valueHT = new PdfPCell(new Phrase(String.format("%.0f F", totalHT), fontInfo));
+            valueHT.setBorder(Rectangle.BOX);
+            valueHT.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            valueHT.setPadding(5);
+            totauxTable.addCell(labelHT);
+            totauxTable.addCell(valueHT);
+
+            // Remise
+            PdfPCell labelRemise = new PdfPCell(new Phrase("Remise", fontInfoBold));
+            labelRemise.setBorder(Rectangle.BOX);
+            labelRemise.setPadding(5);
+            PdfPCell valueRemise = new PdfPCell(new Phrase(String.format("%.0f F", totalRemise), fontInfo));
+            valueRemise.setBorder(Rectangle.BOX);
+            valueRemise.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            valueRemise.setPadding(5);
+            totauxTable.addCell(labelRemise);
+            totauxTable.addCell(valueRemise);
+
+            // Net Commercial
+            PdfPCell labelNet = new PdfPCell(new Phrase("Net Commercial", fontInfoBold));
+            labelNet.setBorder(Rectangle.BOX);
+            labelNet.setPadding(5);
+            PdfPCell valueNet = new PdfPCell(new Phrase(String.format("%.0f F", totalTTC), fontInfo));
+            valueNet.setBorder(Rectangle.BOX);
+            valueNet.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            valueNet.setPadding(5);
+            totauxTable.addCell(labelNet);
+            totauxTable.addCell(valueNet);
+
+            // Montant TVA
+            PdfPCell labelTVA = new PdfPCell(new Phrase("Montant TVA", fontInfoBold));
+            labelTVA.setBorder(Rectangle.BOX);
+            labelTVA.setPadding(5);
+            PdfPCell valueTVA = new PdfPCell(new Phrase("0 F", fontInfo));
+            valueTVA.setBorder(Rectangle.BOX);
+            valueTVA.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            valueTVA.setPadding(5);
+            totauxTable.addCell(labelTVA);
+            totauxTable.addCell(valueTVA);
+
+            // Montant TTC (en gras)
+            PdfPCell labelTTC = new PdfPCell(new Phrase("Montant TTC", fontTotal));
+            labelTTC.setBorder(Rectangle.BOX);
+            labelTTC.setPadding(5);
+            labelTTC.setBackgroundColor(BaseColor.LIGHT_GRAY);
+            PdfPCell valueTTC = new PdfPCell(new Phrase(String.format("%.0f F", totalTTC), fontTotal));
+            valueTTC.setBorder(Rectangle.BOX);
+            valueTTC.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            valueTTC.setPadding(5);
+            valueTTC.setBackgroundColor(BaseColor.LIGHT_GRAY);
+            totauxTable.addCell(labelTTC);
+            totauxTable.addCell(valueTTC);
 
             document.add(totauxTable);
             document.add(new Paragraph(" "));
 
-            // === Montant en lettres ===
+            // === ARRÊTÉ LA PRÉSENTE FACTURE À LA SOMME DE (converti en lettres) ===
             String montantEnLettres = convertirMontantEnLettres((int) totalTTC);
             Paragraph arrete = new Paragraph(
                     "Arrêté la présente facture à la somme de : " + montantEnLettres.toUpperCase() + " FRANCS CFA",
@@ -166,29 +270,28 @@ public class Facturepdf {
             arrete.setSpacingAfter(15);
             document.add(arrete);
 
-            // === Signature ===
+            // === SIGNATURE (plus bas) ===
             Paragraph signature = new Paragraph("Signature", fontInfo);
             signature.setAlignment(Element.ALIGN_RIGHT);
+            signature.setSpacingAfter(80);
             document.add(signature);
 
-            // === NOTE EN BAS DE PAGE ===
+            // Espace pour pousser la note en bas
+            for (int i = 0; i < 10; i++) {
+                document.add(new Paragraph(" "));
+            }
+
+            // === NOTE EN BAS (TOUT EN BAS DE LA PAGE) ===
             Paragraph note = new Paragraph(
                     "NB : Les marchandises livrées ne sont ni reprises ni échangées.",
                     fontSousTitre
             );
             note.setAlignment(Element.ALIGN_CENTER);
-
-            ColumnText.showTextAligned(
-                    writer.getDirectContent(),
-                    Element.ALIGN_CENTER,
-                    note,
-                    (document.right() - document.left()) / 2 + document.leftMargin(),
-                    document.bottomMargin() / 2,
-                    0
-            );
+            document.add(note);
 
             document.close();
 
+            // Sauvegarde du fichier
             sauvegarderFacture(out.toByteArray(), vente.getId());
 
         } catch (Exception e) {
@@ -199,53 +302,15 @@ public class Facturepdf {
         return out.toByteArray();
     }
 
-    // Méthodes utilitaires pour création cellules
-    private PdfPCell createCellCenter(String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.setPadding(5);
-        return cell;
-    }
-
-    private PdfPCell createCellRight(String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        cell.setPadding(5);
-        return cell;
-    }
-
-    private PdfPCell createCellLeft(String text, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
-        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
-        cell.setPadding(5);
-        return cell;
-    }
-
-    private void addTotauxRow(PdfPTable table, String label, double value, Font fontLabel, Font fontValue) {
-        addTotauxRow(table, label, value, fontLabel, fontValue, null);
-    }
-
-    private void addTotauxRow(PdfPTable table, String label, double value, Font fontLabel, Font fontValue, BaseColor bgColor) {
-        PdfPCell labelCell = new PdfPCell(new Phrase(label, fontLabel));
-        PdfPCell valueCell = new PdfPCell(new Phrase(String.format("%.0f F", value), fontValue));
-        labelCell.setPadding(5);
-        valueCell.setPadding(5);
-        labelCell.setBorder(Rectangle.BOX);
-        valueCell.setBorder(Rectangle.BOX);
-        valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        if (bgColor != null) {
-            labelCell.setBackgroundColor(bgColor);
-            valueCell.setBackgroundColor(bgColor);
-        }
-        table.addCell(labelCell);
-        table.addCell(valueCell);
-    }
-
+    /**
+     * Convertit un montant en lettres (en français)
+     */
     private String convertirMontantEnLettres(int montant) {
         if (montant == 0) return "zéro";
 
         String resultat = "";
 
+        // Millions
         if (montant >= 1000000) {
             int millions = montant / 1000000;
             resultat += convertirCentaines(millions) + " million";
@@ -254,15 +319,22 @@ public class Facturepdf {
             if (montant > 0) resultat += " ";
         }
 
+        // Milliers
         if (montant >= 1000) {
             int milliers = montant / 1000;
-            if (milliers == 1) resultat += "mille";
-            else resultat += convertirCentaines(milliers) + " mille";
+            if (milliers == 1) {
+                resultat += "mille";
+            } else {
+                resultat += convertirCentaines(milliers) + " mille";
+            }
             montant %= 1000;
             if (montant > 0) resultat += " ";
         }
 
-        if (montant > 0) resultat += convertirCentaines(montant);
+        // Centaines
+        if (montant > 0) {
+            resultat += convertirCentaines(montant);
+        }
 
         return resultat.trim();
     }
@@ -271,15 +343,23 @@ public class Facturepdf {
         if (nombre == 0) return "";
 
         String resultat = "";
+
+        // Centaines
         int centaines = nombre / 100;
         if (centaines > 0) {
-            if (centaines == 1) resultat += "cent";
-            else resultat += unites[centaines] + " cent";
-            if (nombre % 100 == 0 && centaines > 1) resultat += "s";
+            if (centaines == 1) {
+                resultat += "cent";
+            } else {
+                resultat += unites[centaines] + " cent";
+            }
+            if (nombre % 100 == 0 && centaines > 1) {
+                resultat += "s";
+            }
             nombre %= 100;
             if (nombre > 0) resultat += " ";
         }
 
+        // Dizaines et unités
         if (nombre >= 10 && nombre < 20) {
             resultat += teens[nombre - 10];
         } else {
@@ -288,38 +368,59 @@ public class Facturepdf {
 
             if (dizaine > 0) {
                 resultat += dizaines[dizaine];
-                if ((dizaine == 7 || dizaine == 9) && unite > 0) {
-                    resultat += "-" + teens[unite];
-                    unite = 0;
+                if (dizaine == 7 || dizaine == 9) {
+                    if (unite == 1) {
+                        resultat += " et onze";
+                        unite = 0;
+                    } else if (unite > 1) {
+                        resultat += "-" + teens[unite];
+                        unite = 0;
+                    }
                 }
             }
 
             if (unite > 0) {
-                if (dizaine > 0 && unite == 1 && dizaine != 8 && dizaine != 9) resultat += " et un";
-                else if (dizaine > 0) resultat += "-" + unites[unite];
-                else resultat += unites[unite];
+                if (dizaine > 0 && unite == 1 && dizaine != 8 && dizaine != 9) {
+                    resultat += " et un";
+                } else if (dizaine > 0) {
+                    resultat += "-" + unites[unite];
+                } else {
+                    resultat += unites[unite];
+                }
             }
 
-            if (dizaine == 8 && unite == 0) resultat += "s";
+            if (dizaine == 8 && unite == 0) {
+                resultat += "s";
+            }
         }
 
         return resultat;
     }
 
+    /**
+     * 💾 Sauvegarde la facture PDF dans le dossier "Factures"
+     */
     private void sauvegarderFacture(byte[] pdfBytes, Long venteId) {
         try {
             Path dossierPath = Paths.get(DOSSIER_FACTURES);
-            if (!Files.exists(dossierPath)) Files.createDirectories(dossierPath);
+            if (!Files.exists(dossierPath)) {
+                Files.createDirectories(dossierPath);
+                System.out.println("✅ Dossier 'Factures' créé avec succès");
+            }
 
             DateTimeFormatter fileFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
             String timestamp = LocalDateTime.now().format(fileFormatter);
             String nomFichier = String.format("Facture_%d_%s.pdf", venteId, timestamp);
 
             Path cheminComplet = dossierPath.resolve(nomFichier);
+
             try (FileOutputStream fos = new FileOutputStream(cheminComplet.toFile())) {
                 fos.write(pdfBytes);
+                System.out.println("✅ Facture sauvegardée : " + cheminComplet.toAbsolutePath());
             }
+
         } catch (IOException e) {
+            System.err.println("❌ Erreur lors de la sauvegarde de la facture : " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -41,49 +41,128 @@ public class VenteService {
 
 
 
-    @Transactional
-    public VenteResponseDTO enregistrerVente(Vente vente, String emailVendeur) {
-        // 1️⃣ Vérifier le vendeur
-        Utilisateur vendeur = utilisateurRepository.findByEmail(emailVendeur);
-        if (vendeur == null) {
-            throw new RuntimeException("Vendeur non trouvé");
-        }
+//    @Transactional
+//    public VenteResponseDTO enregistrerVente(Vente vente, String emailVendeur) {
+//        // 1️⃣ Vérifier le vendeur
+//        Utilisateur vendeur = utilisateurRepository.findByEmail(emailVendeur);
+//        if (vendeur == null) {
+//            throw new RuntimeException("Vendeur non trouvé");
+//        }
+//
+//        // 2️⃣ Calcul total + mise à jour des stocks
+//        double total = 0;
+//        for (LigneVente ligne : vente.getLignes()) {
+//            Produit produit = produitRepository.findById(ligne.getProduit().getId())
+//                    .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+//            produit.setQte(produit.getQte() - ligne.getQuantite());
+//            produitRepository.save(produit);
+//            total += ligne.getQuantite() * produit.getPrix();
+//        }
+//
+//        // 3️⃣ Sauvegarde de la vente
+////        vente.setUtilisateur(vendeur);
+//        vente.setDateVente(LocalDateTime.now());
+//        vente.setTotal(total);
+//        Vente savedVente = venteRepository.save(vente);
+//
+//        // 4️⃣ Conversion vers DTO
+//        VenteResponseDTO response = new VenteResponseDTO();
+//        response.setId(savedVente.getId());
+//        response.setDateVente(savedVente.getDateVente());
+//        response.setVendeur(vendeur.getEmail());
+//        response.setTotal(savedVente.getTotal());
+//        response.setProduits(savedVente.getLignes().stream().map(ligne -> {
+//            Produit produit = produitRepository.findById(ligne.getProduit().getId())
+//                    .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+//            ProduitVenduDTO p = new ProduitVenduDTO();
+//            p.setNom(produit.getNom());
+//            p.setQuantite(ligne.getQuantite());
+//            p.setPrixUnitaire(produit.getPrix());
+//            return p;
+//        }).collect(Collectors.toList()));
+//
+//
+//        return response;
+//    }
+//
 
-        // 2️⃣ Calcul total + mise à jour des stocks
-        double total = 0;
-        for (LigneVente ligne : vente.getLignes()) {
-            Produit produit = produitRepository.findById(ligne.getProduit().getId())
-                    .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
-            produit.setQte(produit.getQte() - ligne.getQuantite());
-            produitRepository.save(produit);
-            total += ligne.getQuantite() * produit.getPrix();
-        }
-
-        // 3️⃣ Sauvegarde de la vente
-//        vente.setUtilisateur(vendeur);
-        vente.setDateVente(LocalDateTime.now());
-        vente.setTotal(total);
-        Vente savedVente = venteRepository.save(vente);
-
-        // 4️⃣ Conversion vers DTO
-        VenteResponseDTO response = new VenteResponseDTO();
-        response.setId(savedVente.getId());
-        response.setDateVente(savedVente.getDateVente());
-        response.setVendeur(vendeur.getEmail());
-        response.setTotal(savedVente.getTotal());
-        response.setProduits(savedVente.getLignes().stream().map(ligne -> {
-            Produit produit = produitRepository.findById(ligne.getProduit().getId())
-                    .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
-            ProduitVenduDTO p = new ProduitVenduDTO();
-            p.setNom(produit.getNom());
-            p.setQuantite(ligne.getQuantite());
-            p.setPrixUnitaire(produit.getPrix());
-            return p;
-        }).collect(Collectors.toList()));
 
 
-        return response;
+@Transactional
+public VenteResponseDTO enregistrerVente(Vente vente, String emailVendeur) {
+    // 1️⃣ Vérifier le vendeur
+    Utilisateur vendeur = utilisateurRepository.findByEmail(emailVendeur);
+    if (vendeur == null) {
+        throw new RuntimeException("Vendeur non trouvé");
     }
+
+    // 2️⃣ Calcul du total HT et TTC
+    double totalHT = 0;
+    double totalRemises = 0;
+
+    for (LigneVente ligne : vente.getLignes()) {
+        Produit produit = produitRepository.findById(ligne.getProduit().getId())
+                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+
+        if (produit.getQte() < ligne.getQuantite()) {
+            throw new RuntimeException("Stock insuffisant pour le produit : " + produit.getNom());
+        }
+
+        // Met à jour le stock
+        produit.setQte(produit.getQte() - ligne.getQuantite());
+        produitRepository.save(produit);
+
+        double prixUnitaire = produit.getPrix();
+        double sousTotalHT = ligne.getQuantite() * prixUnitaire;
+
+        double remise = ligne.getRemise();
+        if (remise < 0) remise = 0;
+        if (remise > sousTotalHT) remise = sousTotalHT;
+
+        double sousTotalTTC = sousTotalHT - remise;
+
+        ligne.setPrixUnitaire(prixUnitaire);
+        ligne.setSousTotal(sousTotalTTC);
+        ligne.setVente(vente);
+
+        totalHT += sousTotalHT;
+        totalRemises += remise;
+    }
+
+    double totalTTC = totalHT - totalRemises;
+
+    // 3️⃣ Sauvegarde de la vente
+    vente.setDateVente(LocalDateTime.now());
+    vente.setTotalHT(totalHT);
+    vente.setRemise(totalRemises);
+    vente.setTotalTTC(totalTTC);
+    vente.setVendeur(vendeur);
+
+    Vente savedVente = venteRepository.save(vente);
+
+    // 4️⃣ Conversion vers DTO
+    VenteResponseDTO response = new VenteResponseDTO();
+    response.setId(savedVente.getId());
+    response.setDateVente(savedVente.getDateVente());
+    response.setVendeur(vendeur.getEmail());
+    response.setTotalHT(savedVente.getTotalHT());
+    response.setRemise(savedVente.getRemise());
+    response.setTotalTTC(savedVente.getTotalTTC());
+
+    response.setProduits(savedVente.getLignes().stream().map(ligne -> {
+        Produit produit = produitRepository.findById(ligne.getProduit().getId())
+                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+        ProduitVenduDTO p = new ProduitVenduDTO();
+        p.setNom(produit.getNom());
+        p.setQuantite(ligne.getQuantite());
+        p.setPrixUnitaire(ligne.getPrixUnitaire());
+        p.setRemise(ligne.getRemise());
+        p.setSousTotal(ligne.getSousTotal());
+        return p;
+    }).collect(Collectors.toList()));
+
+    return response;
+}
 
 
     public long getNombreVentesAujourdhui() {

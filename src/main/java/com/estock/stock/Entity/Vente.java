@@ -27,6 +27,12 @@ public class Vente {
     private Utilisateur vendeur;
 
 
+    // ✅ Nouveau : total HT, remise et total TTC
+    private double totalHT;
+    private double remise;
+    private double totalTTC;
+
+
     public Long getId() {
         return id;
     }
@@ -65,6 +71,30 @@ public class Vente {
 
     public void setVendeur(Utilisateur vendeur) {
         this.vendeur = vendeur;
+    }
+
+    public double getTotalHT() {
+        return totalHT;
+    }
+
+    public void setTotalHT(double totalHT) {
+        this.totalHT = totalHT;
+    }
+
+    public double getRemise() {
+        return remise;
+    }
+
+    public void setRemise(double remise) {
+        this.remise = remise;
+    }
+
+    public double getTotalTTC() {
+        return totalTTC;
+    }
+
+    public void setTotalTTC(double totalTTC) {
+        this.totalTTC = totalTTC;
     }
 }
 

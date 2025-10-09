@@ -13,6 +13,34 @@ public class VenteResponseDTO {
     private double total;
     private List<ProduitVenduDTO> produits;
 
+    private double totalHT;
+    private double remise;
+    private double totalTTC;
+
+
+    public double getTotalHT() {
+        return totalHT;
+    }
+
+    public void setTotalHT(double totalHT) {
+        this.totalHT = totalHT;
+    }
+
+    public double getRemise() {
+        return remise;
+    }
+
+    public void setRemise(double remise) {
+        this.remise = remise;
+    }
+
+    public double getTotalTTC() {
+        return totalTTC;
+    }
+
+    public void setTotalTTC(double totalTTC) {
+        this.totalTTC = totalTTC;
+    }
 
     public Long getId() {
         return id;

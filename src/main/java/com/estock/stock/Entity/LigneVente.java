@@ -15,6 +15,7 @@ public class LigneVente {
 
     private int quantite;
     private double prixUnitaire;
+    private double remise;
     private double sousTotal;
 
     @ManyToOne
@@ -31,6 +32,14 @@ public class LigneVente {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public double getRemise() {
+        return remise;
+    }
+
+    public void setRemise(double remise) {
+        this.remise = remise;
     }
 
     public int getQuantite() {

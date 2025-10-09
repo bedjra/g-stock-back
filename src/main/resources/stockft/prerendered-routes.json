@@ -1,0 +1,13 @@
+{
+  "routes": {
+    "/": {},
+    "/dashboard": {},
+    "/detail": {},
+    "/login": {},
+    "/parametre": {},
+    "/pdv": {},
+    "/produit": {},
+    "/profil": {},
+    "/reappro": {}
+  }
+}

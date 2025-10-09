@@ -1,0 +1,14 @@
+export default `<!doctype html>
+<html lang="en" data-beasties-container="">
+<head>
+  <meta charset="utf-8">
+  <title>Stockft</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+<style>*{box-sizing:border-box}body{overflow:hidden!important}</style><link rel="stylesheet" href="styles-6WHQ2B3V.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="styles-6WHQ2B3V.css"></noscript><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" as="style"></head>
+<body ngcm="">
+  <app-root></app-root>
+<script src="main-HRULUL2G.js" type="module"></script></body>
+</html>
+`;
